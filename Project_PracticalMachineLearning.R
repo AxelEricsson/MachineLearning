@@ -1,7 +1,7 @@
 Cleaning Data set of predictors above 50% NA 
 
 ## Read data and adress NAs 
-data <- read.csv("Training_Set.csv", header=T, na.strings= c("",NA))
+data <- read.csv("trainingData.csv", header=T, na.strings= c("",NA))
 
 ## Remove Columns with high NAs - retain 60/160
 cleaned_data = data[1]
@@ -15,7 +15,7 @@ cleaned_data[,names(data[i])] <- data[i]
 cleaned_data <- subset(cleaned_data, select = -c(raw_timestamp_part_1,raw_timestamp_part_2,cvtd_timestamp,X,new_window,num_window,user_name) )
 
 ## Classe Varible to factor 
-classe <- as.factor(cleaned_data$classe)
+as.factor(cleaned_data$classe)
 
 ## Create a training and test set
 Setting up training and test set:
@@ -36,19 +36,33 @@ PCA <- predict(preProc,training[-53])
 
 K-fold nerest neighbor:
 seed.set(500)
-
 knn <- train(classe~., training, method = "knn", 
     trControl = trainControl(method = "cv"))
 
+Single Model - without pre-processing 
+knnPredictTrain <-predict(knn,training)
+KnnTrainAccuracy <- confusionMatrix(training$classe, knnPredictTrain) - 95.47%
+knnPredictTest <-predict(knn,testing)
+KnnTestAccuracy <- confusionMatrix(testing$classe, knnPredictTest)
+ 
+Single Model - with PCA-preprocessing
 knnPCA <- train(classe~., training, method = "knn", preProcess=c("pca"), 
     trControl = trainControl(method = "cv"))
 
-plot
+knnPredictTrainPCA <- predict(knnPCA,training)
+KnnTrainAccuracyPCA <- confusionMatrix(training$classe, knnPredictTrainPCA) 98.05%
 
-##RandomF
+knnPredictTestPCA <- predict(knnPCA,testing)
+KnnTrainAccuracyPCA <- confusionMatrix(testing$classe, knnPredictTrainPCA) 95.58%
+
+Random Forest model 
+
 seed.set(500)
+Running for too long to handle 
 RandomF <- train(classe~., training, method = "rf", preProcess=c("pca"), 
     trControl = trainControl(method = "cv"))
+
+
 
 Resample
 trainControl 
