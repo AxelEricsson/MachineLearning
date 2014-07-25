@@ -18,23 +18,23 @@ The following project will include:
 # Initialization 
 The package used for analysis is the caret package see information at (...)
 
-install.packages("caret")
-library(caret)
-# Loading data set - classifying NA and empty strings as NA
-dataTraning <- read.csv("trainingData.csv", header=T, na.strings= c("",NA))
-dataTesting <- read.csv("testingData.csv", header=T, na.strings= c("",NA))
+    install.packages("caret")
+    library(caret)
+    Loading data set - classifying NA and empty strings as NA
+    dataTraning <- read.csv("trainingData.csv", header=T, na.strings= c("",NA))
+    dataTesting <- read.csv("testingData.csv", header=T, na.strings= c("",NA))
 
 # Data Cleaning 
 The data collected contains a large number of factors containing a large number of missing values.
 I looped through the data set and removed any values with over 50% NA values.
 
 
-cleaned_data = data[1]
+    cleaned_data = data[1]
     for (i in 2:dim(data)[2]) {
     frac_missing <- sum(!is.na(data[i]))/nrow(data[i])
     if(frac_missing > 0.5) 
     cleaned_data[,names(data[i])] <- data[i]
-}
+    }
 
 Additionally the data set contained time stamp values as well as window size measurement and user-information. 
 The user information is not necessary since we are aggregating data, and we are not training the data against any specific user. 
@@ -58,13 +58,15 @@ The models I chose to include in the analysis is:
  
 
 Single Model - without pre-processing
+    
     seed.set(500)
     knnPredictTrain <-predict(knn,training)
-    KnnTrainAccuracy <- confusionMatrix(training$classe, knnPredictTrain)
+    knnTrainAccuracy <- confusionMatrix(training$classe, knnPredictTrain)
     knnPredictTest <-predict(knn,testing)
     KnnTestAccuracy <- confusionMatrix(testing$classe, knnPredictTest)
 
 Single Model - with PCA-preprocessing
+    
     knnPCA <- train(classe~., training, method = "knn", preProcess=c("pca"), 
         trControl = trainControl(method = "cv"))
     knnPredictTrainPCA <- predict(knnPCA,training)
