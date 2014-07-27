@@ -133,6 +133,8 @@ The in-sample accuracy was compared across all models to give an estimate of per
                                  "kernel-PLS"=kPlsModel))  
     parallelplot(ModelComparison)  
 
+![Model Comparison](https://github.com/AxelEricsson/MachineLearning/blob/master/modelComparison.jpg)
+
 
 In sample out Sample error 
 
