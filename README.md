@@ -19,8 +19,8 @@ The following project will include:
     4) Prediction Validation set.   
    
 # Initialization 
-The package used for the analysis is the R - package caret (http://caret.r-forge.r-project.org/).
-The package can handle a multitude of Machine learning procedures, such as data splitting, model training, prediction and much more. 
+The caret package(http://caret.r-forge.r-project.org/)., was used to perform data cleaning, splitting of data, training and predict. 
+
  
     install.packages("caret")
     library(caret)
@@ -45,7 +45,7 @@ I looped through the data set and removed any values with over 50% NA values.
 clean_train<- clean_missing(dataTraining) 
 clean_Validation <- clean_missing(dataValidation)
 
-Since certain values contain information which is not necessary for prediction such as time-stamp values and user information.  
+Since certain values contain information which is not necessary for prediction,such as, time-stamp values and user information.  
 The user information is not necessary since we are aggregating data, and we are not training the data against any specific user. 
 Side note - (individual user information would be interesting for calibration purposes to generate a cleaner signal/noise ratio)
 
@@ -53,7 +53,7 @@ Side note - (individual user information would be interesting for calibration pu
     clean_Validation  <- subset(clean_Validation, select = -c(raw_timestamp_part_1,raw_timestamp_part_2,cvtd_timestamp,X,new_window,num_window,user_name) )
 
 After cleaning the missing values and time-stamp and user information the data set contained 52 prediction values out if the 159 initial values, excluding the outcome value. 
-To get a better understanding on how the data set is structured I investigated the relationship between the predictors by plotting a pairwise corrleation matrix(see image below)
+To get a better understanding on how the data set is structured, the relationship between the predictors was investigated by plotting a pairwise correlation matrix(see image below)
 
     correlations <- cor(clean_train[-53])
     corrplot(correlations, order = 'hclust',tl.cex = .5)
@@ -64,8 +64,7 @@ To solve this problem a preprocessing step will be required, PCA - analysis will
  
 # Setting up training and test set:
 To be able to run any the machine learning algorithms, I set the classe variable into a factor. 
-The data was pre-processed into training, testing and validation data-set. 
-To be able to measure in-sample vs out-sample performance the given training set was split into training and test set.  
+The data was pre-processed into training, testing and validation data-set. The training and testing set was utlized to measure in-sample vs out-sample performance.
 The ratio of the split was 70/30 split resulting in 13737/5885 -  training/test split.
 
     as.factor(clean_Train)$classe)
@@ -78,8 +77,8 @@ The ratio of the split was 70/30 split resulting in 13737/5885 -  training/test 
 The evaluation process was divided into a three steps. 
 
 Step.1 Model Discovery: 
-A large number of models was tested and cross-validated. The accuracy measured across a 10-fold cross validation procedure.  
-across all models to be able to standardize and compare performance. A fixed set seed of 1 was implemented to minimize variation between models. 
+A large number of models was tested and cross-validated. The models accuracy was measured across a 10-fold cross validation procedure.  
+A fixed set seed of 1 was implemented to minimize variation between models. 
 The models included in the analysis was the following: 
  
     1)PLS,
@@ -152,12 +151,11 @@ This step was introduced to filter out the low-performing models.
 
 ![Model Comparison](https://github.com/AxelEricsson/MachineLearning/blob/master/modelComparison.jpg)
 
-PLS, naive bayes and LDA performed poor on the dataset and was excluded from any further analysis. 
+PLS, naive bayes, and LDA performed poor on the dataset and was excluded from any further analysis. 
 The linear models was expected to perform worse than non-linear models, but they also provide less complexity, which can be desired since the results in general is easier to interpret. 
 
 Step.2 Out sample Error: 
 The top models selected was KNNPCA,Random Forest, Boosting and SVM. 
-SVM and Random Forest was indicating to be the strongest models in the set. 
 
 KNN    
 
