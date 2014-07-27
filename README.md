@@ -19,11 +19,6 @@ The following project will include:
 # Initialization 
 The package used for analysis is the caret package see information at (...)
 
-	install.packages("caret")
-	library(caret)
-	dataTraning <- read.csv("trainingData.csv", header=T, na.strings= c("",NA))
-	dataTesting <- read.csv("testingData.csv", header=T, na.strings= c("",NA))
-=======
     install.packages("caret")
     library(caret)
     Loading data set - classifying NA and empty strings as NA
@@ -50,9 +45,7 @@ Checking for Correlations between predictor variables, see image below.
 	
     correlations <- cor(training[-53])
     corrplot(correlations, order = 'hclust',tl.cex = .5)
- 
- ![alt tag](https://raw.github.com/AxelEricsson/MachineLearning/master/correlations.pdf)
- 
+ ![My image](AxelEricsson.github.com/MachineLearning/correlations.pdf)
  
 It appears that several of the prediction variables is correlated according to the plot above. Since the data-set contains correlated varibles, liner models will run into collinear issues. 
 To solve this problem a preprocessing step will be required, PCA - analysis will be run prior all the prediction models. 
