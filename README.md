@@ -3,10 +3,13 @@ MachineLearning
 
 Practical Machine Learning - Course Project
 
-# Introduction 
-This projects aims to determine correctly and incorrectly performed exercise,
-by investigating data collected from a range of different devices.
-For more information about the data and how it has been collected see the following link.
+# Background
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. 
+These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. 
+One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. 
+In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. 
+They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. 
+More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset). 
    
 The following project will include:
 
@@ -17,8 +20,8 @@ The following project will include:
     5) Discussion 
    
 # Initialization 
-The package used for analysis is the caret package see information at (...)
-
+The package used for the analysis is the R - package caret (http://caret.r-forge.r-project.org/).The package can handle a multitude of Machine learning procedures, such as data splitting, model training, prediction and much more. 
+ 
     install.packages("caret")
     library(caret)
     Loading data set - classifying NA and empty strings as NA
@@ -26,8 +29,10 @@ The package used for analysis is the caret package see information at (...)
     dataValidation <- read.csv("testingData.csv", header=T, na.strings= c("",NA))
 
 # Data Cleaning 
-The data collected contains a large number of factors containing a large number of missing values.
-I looped through the data set and removed any values with over 50% NA values.
+The data generated from the devices contained a large number of missing values. 
+The missing values was specific to certain prediction variables which easily could be removed.  
+The overall data set was clean, hence no imputation of values were needed for the retained prediction variables. 
+I looped through the data set and removed any values with over 50% NA values. 
 
     cleaned_data = data[1]
     clean_missing <- function(x){ 
@@ -40,25 +45,28 @@ I looped through the data set and removed any values with over 50% NA values.
 clean_train<- clean_missing(dataTraining) 
 clean_Validation <- clean_missing(dataValidation)
 
-Additionally the data set contained time stamp values as well as window size measurement and user-information. 
-The user information is not necessary since we are aggregating data, and we are not training the data against any specific user. Side note - (individual user information would be interesting for calibration purposes to generate a cleaner signal/noise ratio)
+Since certain values contain information which is not necessary for prediction such as time-stamp values and user information.  
+The user information is not necessary since we are aggregating data, and we are not training the data against any specific user. 
+Side note - (individual user information would be interesting for calibration purposes to generate a cleaner signal/noise ratio)
 
     clean_train <- subset(clean_train, select = -c(raw_timestamp_part_1,raw_timestamp_part_2,cvtd_timestamp,X,new_window,num_window,user_name) )
     clean_Validation  <- subset(clean_Validation, select = -c(raw_timestamp_part_1,raw_timestamp_part_2,cvtd_timestamp,X,new_window,num_window,user_name) )
-	
-Checking for Correlations between predictor variables, see image below.
-	
+
+After cleaning the missing values and time-stamp and user information the data set contained 52 prediction values out if the 159 initial values, excluding the outcome value. 
+To get a better understanding on how the data set is structured I investigated the relationship between the predictors by plotting a pairwise corrleation matrix(see image below)
+
     correlations <- cor(clean_train[-53])
     corrplot(correlations, order = 'hclust',tl.cex = .5)
  ![My image](https://github.com/AxelEricsson/MachineLearning/blob/master/correlations.png)
  
-It appears that several of the prediction variables is correlated according to the plot above. Since the data-set contains correlated varibles, liner models will run into collinear issues. 
+It appears that several of the prediction variables is correlated according to the plot above. Since the data-set contains correlated variables, liner models will run into collinear issues. 
 To solve this problem a preprocessing step will be required, PCA - analysis will be run prior all the prediction models. 
  
 # Setting up training and test set:
 To be able to run any the machine learning algorithms, I set the classe variable into a factor. 
 The data was pre-processed into training, testing and validation data-set. 
-The cleaned data-set was split into 70/30 split between training and test set.  
+To be able to measure in-sample vs out-sample performance the given training set was split into training and test set.  
+The ratio of the split was 70/30 split resulting in 13737/5885 -  training/test split.
 
     as.factor(clean_Train)$classe)
     inTrain <- createDataPartition(y=cleaned_train$classe,p=0.7,list=FALSE)
@@ -67,8 +75,13 @@ The cleaned data-set was split into 70/30 split between training and test set.
 
 # Evaluation of Models 
 
-A wide range of models were included in the screening process including 
-    
+The evaluation process was divided into a three steps. 
+
+Step.1 Model Discovery: 
+A large number of models was tested and cross-validated. The accuracy measured across a 10-fold cross validation procedure.  
+across all models to be able to standardize and compare performance. A fixed set seed of 1 was implemented to minimize variation between models. 
+The models included in the analysis was the following: 
+ 
     1)PLS,
     2)KNN(pre-processed and not pre-processed),
     3)Random Forest
@@ -76,9 +89,7 @@ A wide range of models were included in the screening process including
     5)SVM-polynomial 
     6)Naive Bayes
 
-The cross-validation was performed by a 10-fold cross validation, 
-across all models to be able to standardize and compare performance.
-  
+The code implementing the models was the following: 
 
     set.seed(1)
     controlObject <- trainControl(method = 'repeatedcv',
@@ -126,7 +137,8 @@ across all models to be able to standardize and compare performance.
                  trControl=controlObject 
                  )
 
-The in-sample accuracy was compared across all models to give an estimate of performance.  
+The model discovery phase was completed by comparing in-sample performance across the different model. 
+This step was introduced to filter out the low-performing models.  
 
     ModelComparison <- resamples(list("NaiveB"=nbModel,
                                  "LDA" = ldaModel,
@@ -140,11 +152,12 @@ The in-sample accuracy was compared across all models to give an estimate of per
 
 ![Model Comparison](https://github.com/AxelEricsson/MachineLearning/blob/master/modelComparison.jpg)
 
-PLS, naive bayes and LDA performed very poor on the dataset and was excluded from any further analysis.
-Essentially it was expected that RF, boosted and SVM would perform better, but they also add model complexity. 
+PLS, naive bayes and LDA performed poor on the dataset and was excluded from any further analysis. 
+The linear models was expected to perform worse than non-linear models, but they also provide less complexity, which can be desired since the results in general is easier to interpet. 
 
-
-In sample out Sample error was measured across KnnPCA, Random Forest, Boosting, SVM  
+Step.2 Out sample Error: 
+The top models selected was KNNPCA,Random Forest, Boosting and SVM. 
+SVM and Random Forest was indicating to be the strongest models in the set. 
 
 KNN    
 
@@ -181,14 +194,22 @@ Support Vector Machine
     SVMAccuracyTrain <- confusionMatrix(training$classe,SVMPredTrain)
     SVMAccuracyTest <- confusionMatrix(testing$classe,SMVPredTest)
 
+
+
 # Results and prediction of validation set:
+The four models where assessed by comparing accuracy in-sample versus out-sample. The Random Forest performed very well in training set with 100% accuracy. 
+This is an indication of Over-fitting, which later was proven by the running the model on the test set. The SVM-polynomial was superior in regards of out of sample accuracy 99.23%;
+and an evenly distributed error rate across the different cases(shown in ConfusionMatrix). See figure for comparison of accuracy across models. 
 
-The SVM-polynomial was superior to RF, Boosting and Knn in regards of out of sample performance. 
-Random forest indicated over-fitting, since it performed slightly better in training set with 100% accuracy 
-but only 96% accuracy in test-set.  
+     
+![Out of sample Accuracy](https://github.com/AxelEricsson/MachineLearning/blob/master/InOutError.png)
 
-![Out of sample Accuracy](https://github.com/AxelEricsson/MachineLearning/blob/master/modelComparison.jpg)
+The SVM-polynomial model was selected for the final stage of prediction to validate the 20 samples provided in the cleaned data set. 
+In sample performance and tuning parameters are shown in image below 
+![SVM-Polynomial](https://github.com/AxelEricsson/MachineLearning/blob/master/InOutError.png)
 
+Step.3 Prediction of Validation Set.  
+The prediction of the validation set was carried out by the following code and submitted on Coursera. All of the 20 validation was correctly classified. 
 
 Predicting of validation set: 
 
@@ -203,4 +224,3 @@ SMVPredTest <- predict(SVMFit,clean_Validation)
     }
 plm_write_files(SVMPredTest)
 
-Results 20/20 
