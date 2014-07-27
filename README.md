@@ -9,11 +9,11 @@ by investigating data collected from a range of different devices such as (x,y,z
 For more information about the data and how it has been collected see the following link.
    
 The following project will include:
-1) Initialization of R environment
-2) Cleaning of Data sets 
-3) Evaluation of Machine Learning Algorithms  
-4) Results 
-5) Discussion 
+  1) Initialization of R environment
+  2) Cleaning of Data sets 
+  3) Evaluation of Machine Learning Algorithms  
+  4) Results 
+  5) Discussion 
    
 # Initialization 
 The package used for analysis is the caret package see information at (...)
@@ -73,12 +73,12 @@ The cleaned data-set was split into 70/30 split between training and test set.
 # Evaluation of Models 
 
 A wide range of models were included in the screening process including 
-1)PLS,
-2)KNN(pre-processed and not pre-processed),
-3)Random Forest
-4)Boosting 
-5)SVM-polynomial 
-6)Naive Bayes
+  1)PLS,
+  2)KNN(pre-processed and not pre-processed),
+  3)Random Forest
+  4)Boosting 
+  5)SVM-polynomial 
+  6)Naive Bayes
 
 The cross-validation was performed by a 10-fold cross validation, 
 across all models to be able to standardize and compare performance.
