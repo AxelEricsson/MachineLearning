@@ -34,13 +34,6 @@ The package used for analysis is the caret package see information at (...)
 The data collected contains a large number of factors containing a large number of missing values.
 I looped through the data set and removed any values with over 50% NA values.
 
-	cleaned_data = data[1]
-	for (i in 2:dim(data)[2]) {
-	frac_missing <- sum(!is.na(data[i]))/nrow(data[i])
-	if(frac_missing > 0.5) 
-	cleaned_data[,names(data[i])] <- data[i]
-	}
-
     cleaned_data = data[1]
     for (i in 2:dim(data)[2]) {
     frac_missing <- sum(!is.na(data[i]))/nrow(data[i])
@@ -53,10 +46,13 @@ The user information is not necessary since we are aggregating data, and we are 
 
     cleaned_data <- subset(cleaned_data, select = -c(raw_timestamp_part_1,raw_timestamp_part_2,cvtd_timestamp,X,new_window,num_window,user_name) )
 
-Checking for Correlations between predictor variables
+Checking for Correlations between predictor variables, see image below.
 	
     correlations <- cor(training[-53])
     corrplot(correlations, order = 'hclust',tl.cex = .5)
+ 
+ ![alt tag](https://raw.github.com/AxelEricsson/MachineLearning/master/correlations.pdf)
+ 
  
 It appears that several of the prediction variables is correlated according to the plot above. Since the data-set contains correlated varibles, liner models will run into collinear issues. 
 To solve this problem a preprocessing step will be required, PCA - analysis will be run prior all the prediction models. 
