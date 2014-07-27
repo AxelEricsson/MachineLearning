@@ -15,12 +15,12 @@ The following project will include:
 
     1) Initialization of R environment
     2) Cleaning of Data sets 
-    3) Evaluation of Machine Learning Algorithms  
-    4) Results 
-    5) Discussion 
+    3) Three step evaluation of Machine learning Models  
+    4) Prediction Validation set.   
    
 # Initialization 
-The package used for the analysis is the R - package caret (http://caret.r-forge.r-project.org/).The package can handle a multitude of Machine learning procedures, such as data splitting, model training, prediction and much more. 
+The package used for the analysis is the R - package caret (http://caret.r-forge.r-project.org/).
+The package can handle a multitude of Machine learning procedures, such as data splitting, model training, prediction and much more. 
  
     install.packages("caret")
     library(caret)
@@ -153,7 +153,7 @@ This step was introduced to filter out the low-performing models.
 ![Model Comparison](https://github.com/AxelEricsson/MachineLearning/blob/master/modelComparison.jpg)
 
 PLS, naive bayes and LDA performed poor on the dataset and was excluded from any further analysis. 
-The linear models was expected to perform worse than non-linear models, but they also provide less complexity, which can be desired since the results in general is easier to interpet. 
+The linear models was expected to perform worse than non-linear models, but they also provide less complexity, which can be desired since the results in general is easier to interpret. 
 
 Step.2 Out sample Error: 
 The top models selected was KNNPCA,Random Forest, Boosting and SVM. 
@@ -198,7 +198,7 @@ Support Vector Machine
 
 # Results and prediction of validation set:
 The four models where assessed by comparing accuracy in-sample versus out-sample. The Random Forest performed very well in training set with 100% accuracy. 
-This is an indication of Over-fitting, which later was proven by the running the model on the test set. The SVM-polynomial was superior in regards of out of sample accuracy 99.23%;
+This is an indication of over-fitting, which later was proven by the running the model on the test set. The SVM-polynomial was superior in regards of out of sample accuracy 99.23%;
 and an evenly distributed error rate across the different cases(shown in ConfusionMatrix). See figure for comparison of accuracy across models. 
 
      
@@ -206,15 +206,14 @@ and an evenly distributed error rate across the different cases(shown in Confusi
 
 The SVM-polynomial model was selected for the final stage of prediction to validate the 20 samples provided in the cleaned data set. 
 In sample performance and tuning parameters are shown in image below 
-![SVM-Polynomial](https://github.com/AxelEricsson/MachineLearning/blob/master/InOutError.png)
+![SVM-Polynomial](https://github.com/AxelEricsson/MachineLearning/blob/master/svmPolu.jpeg)
 
 Step.3 Prediction of Validation Set.  
 The prediction of the validation set was carried out by the following code and submitted on Coursera. All of the 20 validation was correctly classified. 
 
 Predicting of validation set: 
 
-SMVPredTest <- predict(SVMFit,clean_Validation)
-
+    SMVPredTest <- predict(SVMFit,clean_Validation)
     pml_write_files = function(x){
       n = length(x)
       for(i in 1:n){
@@ -222,5 +221,5 @@ SMVPredTest <- predict(SVMFit,clean_Validation)
           write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
       }
     }
-plm_write_files(SVMPredTest)
+    plm_write_files(SVMPredTest)
 
