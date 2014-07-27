@@ -5,7 +5,7 @@ Practical Machine Learning - Course Project
 
 # Introduction 
 This projects aims to determine correctly and incorrectly performed exercise,
-by investigating data collected from a range of different devices such as (x,y,z).
+by investigating data collected from a range of different devices.
 For more information about the data and how it has been collected see the following link.
    
 The following project will include:
@@ -23,27 +23,32 @@ The package used for analysis is the caret package see information at (...)
     library(caret)
     Loading data set - classifying NA and empty strings as NA
     dataTraning <- read.csv("trainingData.csv", header=T, na.strings= c("",NA))
-    dataTesting <- read.csv("testingData.csv", header=T, na.strings= c("",NA))
+    dataValidation <- read.csv("testingData.csv", header=T, na.strings= c("",NA))
 
 # Data Cleaning 
 The data collected contains a large number of factors containing a large number of missing values.
 I looped through the data set and removed any values with over 50% NA values.
 
     cleaned_data = data[1]
-    for (i in 2:dim(data)[2]) {
+    clean_missing <- function(x){ 
+	for (i in 2:dim(data)[2]) {
     frac_missing <- sum(!is.na(data[i]))/nrow(data[i])
     if(frac_missing > 0.5) 
     cleaned_data[,names(data[i])] <- data[i]
     }
+    }
+clean_train<- clean_missing(dataTraining) 
+clean_Validation <- clean_missing(dataValidation)
 
 Additionally the data set contained time stamp values as well as window size measurement and user-information. 
 The user information is not necessary since we are aggregating data, and we are not training the data against any specific user. Side note - (individual user information would be interesting for calibration purposes to generate a cleaner signal/noise ratio)
 
-    cleaned_data <- subset(cleaned_data, select = -c(raw_timestamp_part_1,raw_timestamp_part_2,cvtd_timestamp,X,new_window,num_window,user_name) )
-
+    clean_train <- subset(clean_train, select = -c(raw_timestamp_part_1,raw_timestamp_part_2,cvtd_timestamp,X,new_window,num_window,user_name) )
+    clean_Validation  <- subset(clean_Validation, select = -c(raw_timestamp_part_1,raw_timestamp_part_2,cvtd_timestamp,X,new_window,num_window,user_name) )
+	
 Checking for Correlations between predictor variables, see image below.
 	
-    correlations <- cor(training[-53])
+    correlations <- cor(clean_train[-53])
     corrplot(correlations, order = 'hclust',tl.cex = .5)
  ![My image](https://github.com/AxelEricsson/MachineLearning/blob/master/correlations.png)
  
@@ -55,8 +60,8 @@ To be able to run any the machine learning algorithms, I set the classe variable
 The data was pre-processed into training, testing and validation data-set. 
 The cleaned data-set was split into 70/30 split between training and test set.  
 
-    as.factor(cleaned_data$classe)
-    inTrain <- createDataPartition(y=cleaned_data$classe,p=0.7,list=FALSE)
+    as.factor(clean_Train)$classe)
+    inTrain <- createDataPartition(y=cleaned_train$classe,p=0.7,list=FALSE)
     training <-cleaned_data[inTrain,]
     testing <- cleaned_data[-inTrain,]
 
@@ -135,8 +140,11 @@ The in-sample accuracy was compared across all models to give an estimate of per
 
 ![Model Comparison](https://github.com/AxelEricsson/MachineLearning/blob/master/modelComparison.jpg)
 
+PLS, naive bayes and LDA performed very poor on the dataset and was excluded from any further analysis.
+Essentially it was expected that RF, boosted and SVM would perform better, but they also add model complexity. 
 
-In sample out Sample error 
+
+In sample out Sample error was measured across KnnPCA, Random Forest, Boosting, SVM  
 
 KNN    
 
@@ -173,18 +181,26 @@ Support Vector Machine
     SVMAccuracyTrain <- confusionMatrix(training$classe,SVMPredTrain)
     SVMAccuracyTest <- confusionMatrix(testing$classe,SMVPredTest)
 
-Linear Discriminant Analysis 
+# Results and prediction of validation set:
 
-    ldaPredTrain <-predict(ldaModel,training)
-    ldaPredTest <-predict(ldaModel,testing)
-    ldaAccuracyTrain<-confusionMatrix(training$classe,ldaPredTrain)
-    ldaAccuracyTest <- confusionMatrix(testing$classe,ldaPredTest)
+The SVM-polynomial was superior to RF, Boosting and Knn in regards of out of sample performance. 
+Random forest indicated over-fitting, since it performed slightly better in training set with 100% accuracy 
+but only 96% accuracy in test-set.  
 
-Naive Bayes 
+![Out of sample Accuracy](https://github.com/AxelEricsson/MachineLearning/blob/master/modelComparison.jpg)
 
-    nbPredTrain <-predict(nbModel,training)
-    nbPredTest <-predict(mbModelFit,testing)
-    nbAccuracyTrain<-confusionMatrix(training$classe,ldaPredTrain)
-    nbAccuracyTest <- confusionMatrix(testing$classe,ldaPredTest) 
 
-# Results 
+Predicting of validation set: 
+
+SMVPredTest <- predict(SVMFit,clean_Validation)
+
+    pml_write_files = function(x){
+      n = length(x)
+      for(i in 1:n){
+          filename = paste0("problem_id_",i,".txt")
+          write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+      }
+    }
+plm_write_files(SVMPredTest)
+
+Results 20/20 

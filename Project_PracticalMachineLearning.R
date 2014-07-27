@@ -1,7 +1,10 @@
 Cleaning Data set of predictors above 50% NA 
 
+## Setting up Environment 
+
 ## Read data and adress NAs 
 data <- read.csv("trainingData.csv", header=T, na.strings= c("",NA))
+data <- read.csv("testingData.csv", header=T, na.strings= c("",NA))
 
 ## Remove Columns with high NAs - retain 60/160
 cleaned_data = data[1]
@@ -17,55 +20,194 @@ cleaned_data <- subset(cleaned_data, select = -c(raw_timestamp_part_1,raw_timest
 ## Classe Varible to factor 
 as.factor(cleaned_data$classe)
 
+## Check for correlated prediction varibles.
+png('correlations.png')
+correlations <- cor(training[-53])
+corrplot(correlations, order = 'hclust',tl.cex = .5)
+dev.off()
+
+## PCA - Analysis 
+
+modelEval <-function(model,train,test) {
+    predTrain <- predict(model,train)
+    predTest <- predict(model,test)
+    TrainAccuracy <-confusionMatrix(train$classe,predTrain)
+    TestAccuracy  <- confusionMatrix(testing$classe,predTest)
+    output <- list(TrainAccuracy, TestAccuracy)
+    return(output)
+}
+
 ## Create a training and test set
 Setting up training and test set:
 inTrain <- createDataPartition(y=cleaned_data$classe,p=0.7,list=FALSE)
 training <-cleaned_data[inTrain,]
 testing <- cleaned_data[-inTrain,]
 
-## Create a cross validation set
-Kfolds <- createFolds(y=training,k=10,list=TRUE,returnTrain=TRUE)k
-Ksample<- createResample(y=df,times=10,list=FALSE)
-Ktime  <- createTimeSlices(y=tme,initialWindow=windowSlices,horizon=10)
-
-## PreProcessing with PCA
-preProc <- preProcess(training[-53],method='pca',thresh=0.9)
-PCA <- predict(preProc,training[-53])
-
 ## Train model model
+set.seed(1)
+controlObject <- trainControl(method = 'repeatedcv',
+                              repeats = 5,
+                              number=10)
 
-K-fold nerest neighbor:
-seed.set(500)
+## K-fold nerest neighbor:
+seed.set(1)
 knn <- train(classe~., training, method = "knn", 
     trControl = trainControl(method = "cv"))
 
-Single Model - without pre-processing 
+
+)
+knnPerformance <- modelEval(knn,training,testing)
+
 knnPredictTrain <-predict(knn,training)
 KnnTrainAccuracy <- confusionMatrix(training$classe, knnPredictTrain) - 95.47%
 knnPredictTest <-predict(knn,testing)
 KnnTestAccuracy <- confusionMatrix(testing$classe, knnPredictTest)
  
 Single Model - with PCA-preprocessing
-knnPCA <- train(classe~., training, method = "knn", preProcess=c("pca"), 
-    trControl = trainControl(method = "cv"))
+set.seed(1)
+knnGrid <- expand.grid(.k=c(2:5))
+knnPCA <- train(classe~.,  training, method = "knn",
+                           preProcess=c("pca",'center','scale'), 
+                           trControl = trainControl(method = "cv"))
+
+knnPCA25 <- train(classe~.,  training, method = "knn",
+                           preProcess=c("pca",'center','scale'), 
+                           tuneGrid = knnGrid,
+                           trControl = controlObject)
+
+plot(knnPCA)
 
 knnPredictTrainPCA <- predict(knnPCA,training)
 KnnTrainAccuracyPCA <- confusionMatrix(training$classe, knnPredictTrainPCA) 98.05%
-
 knnPredictTestPCA <- predict(knnPCA,testing)
-KnnTrainAccuracyPCA <- confusionMatrix(testing$classe, knnPredictTrainPCA) 95.58%
+KnnTestAccuracyPCA <- confusionMatrix(testing$classe, knnPredictTestPCA) 95.58%
 
-Random Forest model 
+set.seed(1)
+kernelPls <- train(classe~., training, method = "pls", 
+          preProcess=c("pca",'center','scale'),
+          trControl = trainControl(method = "cv"))
 
-seed.set(500)
-Running for too long to handle 
+## Random Forest model 
+seed.set(1)
 RandomF <- train(classe~., training, method = "rf", preProcess=c("pca"), 
-    trControl = trainControl(method = "cv"))
+             preProc=c('center','scale','pca')
+             trControl = trainControl(method = "cv"))
+plot(RandomF)
+
+rfPredict = predict(RandomF,training)
+rfAccuracyTraining = confusionMatrix(training$classe,rfPredict)
+rfPredictTesting <- predict(RandomF,testing)
+rfAccuracytesting = confusionMatrix(testing$classe,rfPredictTesting)
+
+
+## Boosting 
+set.seed(1)
+gbmFit1 <- train(classe ~ ., data = training,
+                 method = "gbm",
+                 preProc=c('center','scale','pca')
+                 trControl=trainControl(method='cv') 
+                 )
+
+
+gbmPredTrain <- predict(gbmFit1,training)
+gbmPredTest <- predict(gbmFit1,testing)
+gbmAccuracyTrain <- confusionMatrix(training$classe,gbmPredTrain)
+gbmAccuracyTest <- confusionMatrix(testing$classe,gbmPredTest)
+
+
+## SVM
+set.seed(1)
+SVMFit <- train(classe ~ ., data = training,
+                 method = "svmPoly",
+                 preProc=c('center','scale','pca'),
+                 trControl=trainControl(method='cv') 
+                 )
+
+SVMPredTrain <- predict(SVMFit,training)
+SMVPredTest <- predict(SVMFit,cleaned_data)
+SVMAccuracyTrain <- confusionMatrix(training$classe,SVMPredTrain)
+SVMAccuracyTest <- confusionMatrix(testing$classe,SMVPredTest)
 
 
 
-Resample
-trainControl 
-method: (boot,boot632,cv,repeatedcv,LOOCV,
-Number: for cv and boot
-Repeates: number of repeats sub sampling
+
+## Model Based analysis 
+set.seed(1)
+ldaFit <- train(classe~.,data=training,
+                preProc=c('center','scale','pca')
+                method='lda', 
+                trControl=trainControl(method='cv'))
+
+
+ldaPredTrain <-predict(ldaFit,training)
+ldaPredTest <-predict(ldaFit,testing)
+ldaAccuracyTrain<-confusionMatrix(training$classe,ldaPredTrain)
+ldaAccuracyTest <- confusionMatrix(testing$classe,ldaPredTest)
+
+set.seed(1)
+nbFit <- train(classe~.,data=training,
+                method='nb', 
+                preproc=c('center',scale,pca)
+                trControl=trainControl(method='cv'))
+
+nbPredTrain <-predict(ldaFit,training)
+nbPredTest <-predict(ldaFit,testing)
+nbAccuracyTrain<-confusionMatrix(training$classe,ldaPredTrain)
+nbAccuracyTest <- confusionMatrix(testing$classe,ldaPredTest)
+
+## Compare Results 
+ModelComparison <- resamples(list("NaiveB"=nbFit,
+                                 "LDA" = ldaFit,
+                                 "SVMPoly"=SVMFit,
+                                 "GBM" = gbmFit1,
+                                 "RF"=RandomF,
+                                 "Knn"=knn,
+                                 "knnPCA"=knnPCA,
+                                 "PLS-kernel"=kernelPls))
+  
+parallelplot((ModelComparison))
+
+jpeg("modelComparison.jpg")
+dev.off()
+
+plot(SVMFit)
+plot(gbmFit1)
+gbmFit1
+
+
+# Grouped Bar Plot
+
+svmAccuracy <- c(SVMAccuracyTrain$overall[1],SVMAccuracyTest$overall[1])
+rfAccuracy <- c(rfAccuracyTraining$overall[1],rfAccuracytesting$overall[1])
+gbmAccuracy <-c(gbmAccuracyTrain$overall[1],gbmAccuracyTest$overall[1])
+
+
+
+
+counts <- table(chart$svmAccuracy, chart$rfAccuracy)
+barplot(counts, main= "In-Sample vs Out-Sample Accuracy",
+  xlab="Models Categories",ylab= 'Accuracy' ,col=c("darkblue","red"),
+ 	 legend = rownames(counts), beside=TRUE)
+
+
+#  Specificity and Sensitivity performance in-sample and out-sample  
+
+detectionAcrossSamples <-function(DM) {
+    frame <- matrix(ncol=2)
+    colnames(frame) <-c('Sensitivity','Specificity')
+    for (i in 1:5){
+        varible <- c(DM[i], DM[i+5])
+        frame <-rbind(frame,varible)
+    }
+   return(frame)
+}
+
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+
+  
